@@ -17,7 +17,7 @@
             align-items: center;
             min-height: 100vh;
             margin: 0;
-            padding: 20px;
+            padding: 20px; /* Base padding for larger screens */
             box-sizing: border-box;
             color: #e2e8f0; /* Light text for dark background */
             overflow: hidden; /* Prevent scrollbar from confetti */
@@ -26,7 +26,7 @@
             background-color: #2d3748; /* Darker gray for container */
             border-radius: 1rem;
             box-shadow: 0 15px 30px rgba(0, 0, 0, 0.4), 0 5px 10px rgba(0, 0, 0, 0.2); /* More pronounced shadow */
-            padding: 2.5rem;
+            padding: 2.5rem; /* Base padding for larger screens */
             width: 100%;
             max-width: 700px;
             display: flex;
@@ -168,23 +168,51 @@
 
         /* Responsive adjustments */
         @media (max-width: 768px) {
+            body {
+                padding: 10px; /* Reduced padding for smaller screens */
+            }
             .quiz-container {
-                padding: 1.5rem;
+                padding: 1.25rem; /* Slightly reduced padding */
+                gap: 1rem; /* Slightly reduced gap */
             }
             .question-text {
-                font-size: 1.25rem;
+                font-size: 1.15rem; /* Slightly smaller font for questions */
+                margin-bottom: 1rem;
             }
             .option-button {
-                font-size: 1rem;
-                padding: 0.8rem 1rem;
+                font-size: 0.95rem; /* Slightly smaller font for options */
+                padding: 0.75rem 1rem; /* Adjusted padding for options */
+                margin-bottom: 0.5rem;
+            }
+            .next-button {
+                font-size: 1.1rem;
+                padding: 0.9rem 1.5rem;
+                margin-top: 1rem;
+            }
+            .results-container {
+                font-size: 1.4rem;
+                padding: 1.25rem;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .quiz-container {
+                padding: 1rem; /* Even smaller padding for very small screens */
+            }
+            .question-text {
+                font-size: 1.1rem;
+            }
+            .option-button {
+                font-size: 0.9rem;
+                padding: 0.6rem 0.8rem;
             }
             .next-button {
                 font-size: 1rem;
-                padding: 0.8rem 1.5rem;
+                padding: 0.75rem 1.25rem;
             }
             .results-container {
-                font-size: 1.5rem;
-                padding: 1.5rem;
+                font-size: 1.2rem;
+                padding: 1rem;
             }
         }
     </style>
