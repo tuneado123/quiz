@@ -1,0 +1,644 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quiz de Eletrônica</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Custom styles for better aesthetics and responsiveness */
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #1a202c; /* Darker, tech-inspired background */
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 20px;
+            box-sizing: border-box;
+            color: #e2e8f0; /* Light text for dark background */
+            overflow: hidden; /* Prevent scrollbar from confetti */
+        }
+        .quiz-container {
+            background-color: #2d3748; /* Darker gray for container */
+            border-radius: 1rem;
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.4), 0 5px 10px rgba(0, 0, 0, 0.2); /* More pronounced shadow */
+            padding: 2.5rem;
+            width: 100%;
+            max-width: 700px;
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+            animation: fadeIn 0.5s ease-out;
+            border: 2px solid #4a5568; /* Subtle border */
+            position: relative; /* For confetti positioning */
+            z-index: 1; /* Ensure quiz is above confetti */
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .question-text {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: #e2e8f0; /* Light text for questions */
+            margin-bottom: 1.5rem;
+            line-height: 1.4;
+        }
+        .option-button {
+            width: 100%;
+            padding: 1rem 1.5rem;
+            background-color: #4a5568; /* Slightly lighter gray for options */
+            color: #e2e8f0;
+            border: 2px solid #6a768e; /* Border matching theme */
+            border-radius: 0.75rem;
+            text-align: left;
+            font-size: 1.1rem;
+            cursor: pointer;
+            transition: all 0.2s ease-in-out;
+            margin-bottom: 0.75rem;
+            display: flex;
+            align-items: flex-start;
+            gap: 1rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2); /* Subtle shadow for buttons */
+        }
+        .option-button:hover:not(.selected):not(.correct):not(.incorrect) {
+            background-color: #5a67d8; /* Blue-purple on hover */
+            border-color: #7b88e8;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 10px rgba(0, 0, 0, 0.3);
+        }
+        .option-button.selected {
+            background-color: #63b3ed; /* Bright blue for selected */
+            border-color: #4299e1;
+            color: #1a202c; /* Dark text for selected */
+            font-weight: 500;
+            box-shadow: 0 0 15px rgba(99, 179, 237, 0.8); /* Glow effect */
+        }
+        .option-button.correct {
+            background-color: #48bb78; /* Green for correct */
+            border-color: #38a169;
+            color: #1a202c;
+            font-weight: 600;
+            box-shadow: 0 0 15px rgba(72, 187, 120, 0.8);
+        }
+        .option-button.incorrect {
+            background-color: #ef4444; /* Red for incorrect */
+            border-color: #dc2626;
+            color: #1a202c;
+            font-weight: 600;
+            box-shadow: 0 0 15px rgba(239, 68, 68, 0.8);
+        }
+        .option-label {
+            font-weight: 700;
+            min-width: 1.5rem;
+            color: #a0aec0; /* Lighter gray for labels */
+        }
+        .option-button.selected .option-label,
+        .option-button.correct .option-label,
+        .option-button.incorrect .option-label {
+            color: #1a202c; /* Darker label when selected/correct/incorrect */
+        }
+        .next-button {
+            width: 100%;
+            padding: 1rem 2rem;
+            background-color: #5a67d8; /* Blue-purple for next button */
+            color: white;
+            border: none;
+            border-radius: 0.75rem;
+            font-size: 1.2rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.2s ease-in-out, transform 0.1s ease-in-out;
+            margin-top: 1.5rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+        }
+        .next-button:hover {
+            background-color: #4c51bf;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 10px rgba(0, 0, 0, 0.4);
+        }
+        .next-button:active {
+            transform: translateY(0);
+        }
+        .results-container {
+            text-align: center;
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: #48bb78; /* Green for results */
+            padding: 2rem;
+            border: 3px dashed #48bb78; /* Green dashed border */
+            border-radius: 1rem;
+            background-color: #2d3748; /* Same as container for consistency */
+            box-shadow: 0 0 20px rgba(72, 187, 120, 0.6); /* Green glow for results */
+        }
+        .restart-button {
+            background-color: #ed8936; /* Orange for restart */
+            margin-top: 1rem;
+        }
+        .restart-button:hover {
+            background-color: #dd6b20;
+        }
+
+        /* Confetti styles */
+        .confetti {
+            position: fixed;
+            width: 10px;
+            height: 10px;
+            background-color: #fff; /* Default color, overridden by JS */
+            border-radius: 50%; /* Circle shape */
+            opacity: 0;
+            animation: confetti-fall 3s forwards ease-out;
+            z-index: 0; /* Below the quiz container */
+        }
+
+        @keyframes confetti-fall {
+            0% {
+                opacity: 1;
+                transform: translateY(-50px) rotate(0deg);
+            }
+            100% {
+                opacity: 0;
+                transform: translateY(100vh) rotate(720deg);
+            }
+        }
+
+        /* Responsive adjustments */
+        @media (max-width: 768px) {
+            .quiz-container {
+                padding: 1.5rem;
+            }
+            .question-text {
+                font-size: 1.25rem;
+            }
+            .option-button {
+                font-size: 1rem;
+                padding: 0.8rem 1rem;
+            }
+            .next-button {
+                font-size: 1rem;
+                padding: 0.8rem 1.5rem;
+            }
+            .results-container {
+                font-size: 1.5rem;
+                padding: 1.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="quiz-container" id="quizContainer">
+        <div id="questionDisplay">
+            <p class="text-lg text-gray-400 mb-2" id="questionNumber"></p>
+            <h2 class="question-text" id="questionText"></h2>
+            <div id="optionsContainer" class="flex flex-col gap-3">
+                <!-- Options will be loaded here by JavaScript -->
+            </div>
+            <button class="next-button" id="nextButton">Próxima Questão</button>
+        </div>
+        <div id="resultsDisplay" class="hidden">
+            <p class="results-container" id="scoreText"></p>
+            <button class="next-button restart-button" id="restartButton">Reiniciar Quiz</button>
+        </div>
+    </div>
+
+    <script>
+        const originalQuestions = [
+            {
+                question: "1) Cite características de um MOSFET e aplicações.",
+                options: {
+                    A: "Alta impedância de entrada, controle por tensão, alta velocidade de chaveamento; aplicações em fontes chaveadas e circuitos digitais.",
+                    B: "Baixa impedância de entrada, controle por corrente, baixa velocidade de chaveamento; aplicações em amplificadores de áudio e retificadores.",
+                    C: "Alta impedância de entrada, controle por corrente, alta perda de energia em condução; aplicações em sensores e atuadores.",
+                    D: "Baixa impedância de entrada, controle por tensão, baixa perda de energia em condução; aplicações em filtros e osciladores."
+                },
+                correctAnswer: "A"
+            },
+            {
+                question: "2) Determine os terminais de um MOSFET, quais deles atuam como contatos de uma chave?",
+                options: {
+                    A: "Gate, Source, Drain; Drain e Source atuam como contatos de uma chave.",
+                    B: "Base, Coletor, Emissor; Base e Coletor atuam como contatos de uma chave.",
+                    C: "Gate, Ânodo, Catodo; Gate e Ânodo atuam como contatos de uma chave.",
+                    D: "MT1, MT2, Gate; MT1 e MT2 atuam como contatos de uma chave."
+                },
+                correctAnswer: "A"
+            },
+            {
+                question: "3) Qual a vantagem do IGBT frente ao MOSFET de potência?",
+                options: {
+                    A: "Maior capacidade de corrente com menor queda de tensão em estado ligado, ideal para alta potência.",
+                    B: "Maior velocidade de chaveamento em todas as potências.",
+                    C: "Menor impedância de entrada, facilitando o acionamento.",
+                    D: "Imunidade total a descargas eletrostáticas (ESD)."
+                },
+                correctAnswer: "A"
+            },
+            {
+                question: "4) Qual o princípio de funcionamento do MOSFET canal N?",
+                options: {
+                    A: "Criação de canal condutivo N por atração de elétrons via tensão positiva no Gate.",
+                    B: "Injeção de lacunas do Source controladas por corrente de Gate.",
+                    C: "Modulação de região de depleção preexistente por tensão de Gate.",
+                    D: "Polarização reversa Drain-Source para iniciar condução."
+                },
+                correctAnswer: "A"
+            },
+            {
+                question: "5) Qual o princípio de funcionamento do IGBT?",
+                options: {
+                    A: "MOSFET na entrada para controle por tensão e BJT na saída para alta corrente e baixa queda de tensão.",
+                    B: "Dois MOSFETs de alta potência em série para dobrar a tensão.",
+                    C: "BJT convencional com gate isolado para maior sensibilidade.",
+                    D: "Diodo Zener interno para regular tensão de gate."
+                },
+                correctAnswer: "A"
+            },
+            {
+                question: "6) Quais os tipos de IGBTs existentes no mercado e quais as suas diferenças?",
+                options: {
+                    A: "Non-Punch Through (NPT) e Punch Through (PT); PT tem camada buffer N+ para melhor desempenho.",
+                    B: "De baixa e alta potência; a diferença é apenas o tamanho físico.",
+                    C: "De canal N e canal P; a diferença é o tipo de portador majoritário.",
+                    D: "De aprimoramento e depleção; a diferença é a tensão de limiar."
+                },
+                correctAnswer: "A"
+            },
+            {
+                question: "7) Qual o princípio de funcionamento do transistor de unijunção (UJT)?",
+                options: {
+                    A: "Atua como chave controlada por tensão, disparando ao atingir tensão de pico no emissor pela modulação da resistência da barra de silício.",
+                    B: "Amplifica sinal de corrente na base 1.",
+                    C: "Retifica sinal AC para DC pulsante.",
+                    D: "Gera corrente de saída constante."
+                },
+                correctAnswer: "A"
+            },
+            {
+                question: "8) Como se testa o transistor de unijunção (UJT)?",
+                options: {
+                    A: "Medindo resistências entre bases e junção Emissor-Base 1 com multímetro.",
+                    B: "Aplicando alta tensão reversa no emissor e medindo fuga.",
+                    C: "Conectando a fonte de corrente constante e observando saída em osciloscópio.",
+                    D: "Verificando capacitância parasita entre terminais."
+                },
+                correctAnswer: "A"
+            },
+            {
+                question: "9) O que é um oscilador de relaxação?",
+                options: {
+                    A: "Circuito não linear que produz formas de onda não senoidais por carga/descarga de componente reativo.",
+                    B: "Gerador de ondas senoidais de alta pureza.",
+                    C: "Amplificador de sinal que satura a saída.",
+                    D: "Conversor eficiente de AC em DC regulada."
+                },
+                correctAnswer: "A"
+            },
+            {
+                question: "10) Explique o funcionamento básico de um oscilador de relaxação.",
+                options: {
+                    A: "Capacitor carrega via resistor até tensão de disparo, ativando chaveamento que o descarrega rapidamente, reiniciando o ciclo.",
+                    B: "Indutor carrega/descarrega por transistor bipolar em saturação.",
+                    C: "Frequência determinada por cristal de quartzo.",
+                    D: "Usa amplificador operacional com feedback positivo para oscilação senoidal."
+                },
+                correctAnswer: "A"
+            },
+            {
+                question: "11) O que são tiristores e qual a sua principal vantagem?",
+                options: {
+                    A: "Dispositivos PNPN biestáveis que controlam grandes potências com pequeno sinal de gate.",
+                    B: "Transistores bipolares de alta potência para amplificação.",
+                    C: "Diodos de alta velocidade para retificação RF.",
+                    D: "Resistores variáveis controlados por tensão."
+                },
+                correctAnswer: "A"
+            },
+            {
+                question: "12) Cite cinco tiristores existentes.",
+                options: {
+                    A: "SCR, DIAC, TRIAC, GTO, LASCR.",
+                    B: "MOSFET, BJT, JFET, UJT, Darlington.",
+                    C: "Diodo, Capacitor, Resistor, Indutor, Transformador.",
+                    D: "LED, Fotodiodo, Célula Solar, Termistor, Varistor."
+                },
+                correctAnswer: "A"
+            },
+            {
+                question: "13) O que é um SCR, qual sua estrutura física e o seu símbolo?",
+                options: {
+                    A: "Retificador controlado de silício, PNPN de quatro camadas, símbolo de diodo com gate.",
+                    B: "Transistor bipolar de três camadas com base.",
+                    C: "Diodo Zener de alta potência em ruptura reversa.",
+                    D: "Dispositivo de duas camadas que conduz bidirecionalmente."
+                },
+                correctAnswer: "A"
+            },
+            {
+                question: "14) O que é um LASCR?",
+                options: {
+                    A: "Light Activated SCR, disparado por luz em sua junção interna.",
+                    B: "SCR de alta velocidade para lasers.",
+                    C: "SCR com baixa corrente de fuga.",
+                    D: "SCR para operar exclusivamente com AC."
+                },
+                correctAnswer: "A"
+            },
+            {
+                question: "15) Como se liga e como se desliga um SCR?",
+                options: {
+                    A: "Ligar: pulso positivo no gate (ânodo positivo). Desligar: reduzir corrente de ânodo abaixo de manutenção ou inverter polaridade.",
+                    B: "Ligar: tensão negativa no gate. Desligar: aumentar corrente de gate.",
+                    C: "Ligar: aumentar tensão ânodo-catodo até ruptura. Desligar: pulso negativo no gate.",
+                    D: "Ligar: tensão contínua no gate. Desligar: remover tensão do gate."
+                },
+                correctAnswer: "A"
+            },
+            {
+                question: "16) Para que serve o sinal da porta (gate) do tiristor quando o mesmo está no estado ligado?",
+                options: {
+                    A: "Não tem mais função; tiristor conduz independentemente do gate se corrente principal acima da manutenção.",
+                    B: "Controla a magnitude da corrente.",
+                    C: "Aumenta a velocidade de chaveamento.",
+                    D: "Desliga o tiristor instantaneamente."
+                },
+                correctAnswer: "A"
+            },
+            {
+                question: "17) Quais são os três estados básicos de operação de um SCR na sua curva idealizada?",
+                options: {
+                    A: "Bloqueio direto (off-state), Condução direta (on-state), Bloqueio reverso (reverse blocking).",
+                    B: "Amplificação, Saturação, Corte.",
+                    C: "Carga, Descarga, Repouso.",
+                    D: "Ativo, Inativo, Curto-circuito."
+                },
+                correctAnswer: "A"
+            },
+            {
+                question: "18) Como se testa um SCR?",
+                options: {
+                    A: "Usar multímetro para junção gate-catodo e circuito simples para verificar ligação/manutenção.",
+                    B: "Medir resistência ânodo-catodo em ambas as direções.",
+                    C: "Aplicar alta tensão reversa e verificar condução.",
+                    D: "Conectar gate à alimentação e observar fuga."
+                },
+                correctAnswer: "A"
+            },
+            {
+                question: "19) Quais os valores nominais do SCR a serem considerados?",
+                options: {
+                    A: "VRRM, IT(AV), ITSM, VGT, IGT, IH.",
+                    B: "hFE, ICmax, VCEsat.",
+                    C: "RDS(on), VTH, Ciss.",
+                    D: "Frequência de corte, Largura de banda, Impedância de entrada."
+                },
+                correctAnswer: "A"
+            },
+            {
+                question: "20) Porque as vezes ligamos SCRs em paralelo ou em série?",
+                options: {
+                    A: "Paralelo para aumentar corrente, série para aumentar tensão.",
+                    B: "Paralelo para aumentar disparo, série para diminuir manutenção.",
+                    C: "Paralelo para diminuir chaveamento, série para aumentar impedância.",
+                    D: "Para reduzir custo total do sistema."
+                },
+                correctAnswer: "A"
+            },
+            {
+                question: "21) O que é um TRIAC?",
+                options: {
+                    A: "Tiristor de três terminais, conduz bidirecionalmente (dois SCRs em antiparalelo com gate comum).",
+                    B: "Diodo Zener otimizado para bidirecional.",
+                    C: "Transistor de efeito de campo com três portas.",
+                    D: "Retificador de onda completa com controle de fase."
+                },
+                correctAnswer: "A"
+            },
+            {
+                question: "22) Como pode ser disparado um TRIAC?",
+                options: {
+                    A: "Pulso de gate positivo ou negativo, independente da polaridade MT1-MT2.",
+                    B: "Apenas pulso positivo no gate (MT2 positivo).",
+                    C: "Apenas pulso negativo no gate (MT2 negativo).",
+                    D: "Somente com tensão MT1-MT2 muito alta."
+                },
+                correctAnswer: "A"
+            },
+            {
+                question: "23) O que é um DIAC?",
+                options: {
+                    A: "Diodo de corrente alternada, chaveamento bidirecional, conduz ao atingir tensão de ruptura em qualquer polaridade.",
+                    B: "Diodo retificador de alta potência.",
+                    C: "Transistor de efeito de campo de baixa potência.",
+                    D: "Sensor de temperatura."
+                },
+                correctAnswer: "A"
+            },
+            {
+                question: "24) Cite uma aplicação para o DIAC.",
+                options: {
+                    A: "Disparo de TRIACs em controle de fase (dimmers, motores AC).",
+                    B: "Retificação de alta frequência em fontes chaveadas.",
+                    C: "Pré-amplificação de áudio.",
+                    D: "Reguladores de tensão lineares."
+                },
+                correctAnswer: "A"
+            },
+            {
+                question: "25) Defina Varistor e Fusível.",
+                options: {
+                    A: "Varistor: Resistor dependente de tensão para surtos. Fusível: Proteção contra sobrecorrente que se rompe.",
+                    B: "Varistor: Capacitor variável. Fusível: Diodo de proteção reversa.",
+                    C: "Varistor: Indutor ajustável. Fusível: Interruptor manual.",
+                    D: "Varistor: Transistor de potência. Fusível: Resistor de precisão."
+                },
+                correctAnswer: "A"
+            }
+        ];
+
+        let questions = []; // This will hold the questions in their original order
+        let currentQuestionIndex = 0;
+        let score = 0;
+        let selectedAnswer = null;
+
+        const questionNumberElem = document.getElementById('questionNumber');
+        const questionTextElem = document.getElementById('questionText');
+        const optionsContainer = document.getElementById('optionsContainer');
+        const nextButton = document.getElementById('nextButton');
+        const quizDisplay = document.getElementById('questionDisplay');
+        const resultsDisplay = document.getElementById('resultsDisplay');
+        const scoreText = document.getElementById('scoreText');
+        const restartButton = document.getElementById('restartButton');
+
+        // Function to shuffle an array (Fisher-Yates algorithm)
+        function shuffleArray(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]]; // Swap elements
+            }
+            return array;
+        }
+
+        // Function to load a question
+        function loadQuestion() {
+            // Reset selected answer and button states
+            selectedAnswer = null;
+            nextButton.disabled = true; // Disable next button until an answer is selected
+            nextButton.classList.add('opacity-50', 'cursor-not-allowed'); // Visual feedback for disabled button
+
+            const currentQuestion = questions[currentQuestionIndex];
+            questionNumberElem.textContent = `Questão ${currentQuestionIndex + 1} de ${questions.length}`;
+            questionTextElem.textContent = currentQuestion.question;
+            optionsContainer.innerHTML = ''; // Clear previous options
+
+            // Get original option keys and shuffle them for display
+            const originalOptionKeys = Object.keys(currentQuestion.options); // ['A', 'B', 'C', 'D']
+            const shuffledOptionKeys = shuffleArray([...originalOptionKeys]); // e.g., ['C', 'A', 'D', 'B']
+
+            const displayLabels = ['A', 'B', 'C', 'D']; // Labels to display on buttons
+
+            // Create buttons for each option based on shuffled order
+            shuffledOptionKeys.forEach((originalKey, index) => {
+                const optionButton = document.createElement('button');
+                optionButton.classList.add('option-button');
+                // Use the display label (A, B, C, D) for presentation, but originalKey for data-answer
+                optionButton.innerHTML = `<span class="option-label">${displayLabels[index]})</span> ${currentQuestion.options[originalKey]}`;
+                optionButton.dataset.answer = originalKey; // Store the ORIGINAL answer label (A, B, C, D)
+                optionButton.addEventListener('click', () => selectAnswer(optionButton, originalKey)); // Pass originalKey
+                optionsContainer.appendChild(optionButton);
+            });
+        }
+
+        // Function to handle answer selection
+        function selectAnswer(button, answer) {
+            // Remove 'selected' class from ALL buttons first
+            Array.from(optionsContainer.children).forEach(btn => {
+                btn.classList.remove('selected');
+            });
+
+            // Mark the new selected answer
+            selectedAnswer = answer; // This is the originalKey (A, B, C, D)
+            button.classList.add('selected');
+
+            // Enable next button
+            nextButton.disabled = false;
+            nextButton.classList.remove('opacity-50', 'cursor-not-allowed');
+
+            // IMPORTANT: Do NOT disable option buttons here. They should remain clickable.
+        }
+
+        // Function to move to the next question or show results
+        function nextQuestion() {
+            if (selectedAnswer === null) {
+                // This should not happen if button is disabled, but as a fallback
+                console.log("Por favor, selecione uma resposta antes de prosseguir.");
+                return;
+            }
+
+            // Disable all option buttons immediately when next is clicked
+            Array.from(optionsContainer.children).forEach(btn => {
+                btn.disabled = true;
+            });
+
+            // Check if the selected answer is correct
+            const currentQuestion = questions[currentQuestionIndex];
+            const correctOption = currentQuestion.correctAnswer; // This is the originalKey (A, B, C, D)
+
+            // Find the button that was selected by the user (using its data-answer)
+            const selectedButton = optionsContainer.querySelector(`.option-button[data-answer="${selectedAnswer}"]`);
+            // Find the button that corresponds to the correct answer (using its data-answer)
+            const correctButton = optionsContainer.querySelector(`.option-button[data-answer="${correctOption}"]`);
+
+
+            // Provide visual feedback for correct/incorrect
+            if (selectedAnswer === correctOption) {
+                score++;
+                selectedButton.classList.add('correct');
+            } else {
+                selectedButton.classList.add('incorrect');
+                // Ensure the correct answer is always highlighted in green if the user was wrong
+                if (correctButton) {
+                    correctButton.classList.add('correct');
+                }
+            }
+
+            // Briefly show feedback then move to next question
+            setTimeout(() => {
+                currentQuestionIndex++;
+                if (currentQuestionIndex < questions.length) {
+                    loadQuestion();
+                } else {
+                    showResults();
+                }
+            }, 1000); // 1-second delay to show feedback
+        }
+
+        // Function to create confetti effect
+        function createConfetti() {
+            const colors = ['#f06292', '#ba68c8', '#64b5f6', '#81c784', '#ffb74d', '#e0e0e0']; // Pastel colors
+            const numConfetti = 50; // Number of confetti pieces
+
+            for (let i = 0; i < numConfetti; i++) {
+                const confetti = document.createElement('div');
+                confetti.classList.add('confetti');
+                confetti.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+                confetti.style.left = `${Math.random() * 100}vw`; // Random horizontal position
+                confetti.style.animationDuration = `${2 + Math.random() * 2}s`; // Random duration
+                confetti.style.animationDelay = `${Math.random() * 0.5}s`; // Random delay
+                document.body.appendChild(confetti);
+
+                // Remove confetti after animation to clean up DOM
+                confetti.addEventListener('animationend', () => {
+                    confetti.remove();
+                });
+            }
+        }
+
+        // Function to display final results
+        function showResults() {
+            quizDisplay.classList.add('hidden');
+            resultsDisplay.classList.remove('hidden');
+
+            const totalQuestions = originalQuestions.length; // Use originalQuestions.length for total
+
+            if (score >= 20 && score <= 25) {
+                scoreText.innerHTML = `MUITO BEM! &#10084;<br>Você acertou ${score} de ${totalQuestions} questões!`;
+                scoreText.style.color = '#48bb78'; /* Green for success */
+                scoreText.style.borderColor = '#48bb78';
+                scoreText.style.boxShadow = '0 0 20px rgba(72, 187, 120, 0.6)';
+            } else {
+                scoreText.innerHTML = `TA OK!<br>Você acertou ${score} de ${totalQuestions} questões!`;
+                scoreText.style.color = '#ed8936'; /* Orange for 'OK' */
+                scoreText.style.borderColor = '#ed8936';
+                scoreText.style.boxShadow = '0 0 20px rgba(237, 137, 54, 0.6)';
+                createConfetti(); // Trigger confetti
+            }
+        }
+
+        // Function to restart the quiz
+        function restartQuiz() {
+            currentQuestionIndex = 0;
+            score = 0;
+            selectedAnswer = null;
+            resultsDisplay.classList.add('hidden');
+            quizDisplay.classList.remove('hidden');
+            // Reset questions to original order for restart
+            questions = [...originalQuestions]; // Use a copy to avoid modifying original
+            loadQuestion();
+        }
+
+        // Event Listeners
+        nextButton.addEventListener('click', nextQuestion);
+        restartButton.addEventListener('click', restartQuiz);
+
+        // Initial setup: load questions in original order
+        document.addEventListener('DOMContentLoaded', () => {
+            questions = [...originalQuestions]; // Initialize questions with original order
+            loadQuestion();
+        });
+    </script>
+</body>
+</html>
